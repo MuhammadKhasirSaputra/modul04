@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Category;
+use Illuminate\Http\Request;
+
+class CategoryController extends Controller
+{
+    public function index()
+    {
+        $categories      = Category::withCount('books')->get();
+        $totalCategories = Category::count();
+        $totalBooks      = \App\Models\Book::count();
+
+        return view('categories.index', compact('categories', 'totalCategories', 'totalBooks'));
+    }
+
+    public function create()
+    {
+        return view('categories.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nama_kategori' => 'required|unique:categories,nama_kategori|max:100',
+            'deskripsi'     => 'nullable|max:255',
+        ]);
+
+        Category::create($request->all());
+
+        return redirect()->route('categories.index')
+                ->with('success', 'Kategori berhasil ditambahkan');
+    }
+
+    public function edit(Category $category)
+    {
+        return view('categories.edit', compact('category'));
+    }
+
+    public function update(Request $request, Category $category)
+    {
+        $request->validate([
+            'nama_kategori' => 'required|unique:categories,nama_kategori,' . $category->id . '|max:100',
+            'deskripsi'     => 'nullable|max:255',
+        ]);
+
+        $category->update($request->all());
+
+        return redirect()->route('categories.index')
+                ->with('success', 'Kategori berhasil diupdate');
+    }
+
+    public function destroy(Category $category)
+    {
+        // Cegah hapus jika masih ada buku terkait
+        if ($category->books()->count() > 0) {
+            return redirect()->route('categories.index')
+                    ->with('error', 'Kategori tidak bisa dihapus karena masih memiliki buku!');
+        }
+
+        $category->delete();
+
+        return redirect()->route('categories.index')
+                ->with('success', 'Kategori berhasil dihapus');
+    }
+}
