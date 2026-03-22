@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="container mt-4">
 
 <div class="d-flex justify-content-between mb-3">
     <h3>Data Book</h3>
@@ -8,15 +9,11 @@
 </div>
 
 @if(session('success'))
-<div class="alert alert-success">
-    {{ session('success') }}
-</div>
+<div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
 {{-- Informasi Jumlah Data --}}
 <div class="row mb-3">
-
-    {{-- Total Semua Buku --}}
     <div class="col-md-3 mb-2">
         <div class="card text-white bg-primary h-100">
             <div class="card-body d-flex align-items-center">
@@ -27,8 +24,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Per Kategori --}}
     <div class="col-md-9 mb-2">
         <div class="card h-100">
             <div class="card-body">
@@ -37,8 +32,8 @@
                     @foreach($totalPerCategory as $cat)
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="border rounded px-2 py-1 d-flex justify-content-between align-items-center">
-                            <span class="small text-truncate me-1">{{ $cat->nama_kategori }}</span>
-                            <span class="badge bg-primary rounded-pill">{{ $cat->books_count }}</span>
+                            <span class="small text-truncate me-1 text-primary fw-semibold">{{ $cat->nama_kategori }}</span>
+                            <span class="badge rounded-pill text-white" style="background-color:#0d6efd">{{ $cat->books_count }}</span>
                         </div>
                     </div>
                     @endforeach
@@ -46,10 +41,9 @@
             </div>
         </div>
     </div>
-
 </div>
 
-{{-- Form Pencarian & Filter Kategori --}}
+{{-- Form Pencarian & Filter --}}
 <div class="card mb-3">
     <div class="card-body">
         <form action="{{ route('books.index') }}" method="GET" class="row g-2 align-items-end">
@@ -78,67 +72,71 @@
     </div>
 </div>
 
-{{-- Tabel Data Buku --}}
+{{-- Tabel --}}
 <div class="card">
     <div class="card-body">
-
         <p class="text-muted">Menampilkan <strong>{{ $books->count() }}</strong> data buku
             @if(request('search') || request('category_id'))
                 (hasil pencarian/filter)
             @endif
         </p>
-
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
                     <th>No</th>
+                    <th>Gambar</th>
                     <th>Judul</th>
                     <th>Kategori</th>
                     <th>Penulis</th>
                     <th>Tahun</th>
                     <th>Stok</th>
-                    <th width="150">Aksi</th>
+                    <th width="180">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($books as $key => $book)
                 <tr>
                     <td>{{ $key + 1 }}</td>
+                    <td>
+                        @if($book->gambar)
+                            <img src="{{ asset('storage/' . $book->gambar) }}"
+                                 alt="{{ $book->judul }}"
+                                 style="width:55px; height:75px; object-fit:cover; border-radius:4px;">
+                        @else
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                 style="width:55px; height:75px; font-size:10px; color:#999;">
+                                No Image
+                            </div>
+                        @endif
+                    </td>
                     <td>{{ $book->judul }}</td>
                     <td>{{ $book->category->nama_kategori ?? '-' }}</td>
                     <td>{{ $book->penulis }}</td>
                     <td>{{ $book->tahun_terbit }}</td>
+                    <td><span class="badge bg-info">{{ $book->stok }}</span></td>
                     <td>
-                        <span class="badge bg-info">{{ $book->stok }}</span>
-                    </td>
-                    <td>
-                        <a href="{{ route('books.edit',$book->id) }}"
-                           class="btn btn-warning btn-sm">Edit</a>
-
-                        <form action="{{ route('books.destroy',$book->id) }}"
-                              method="POST" class="d-inline">
+                        <a href="{{ route('books.show', $book->id) }}" class="btn btn-info btn-sm">Detail</a>
+                        <a href="{{ route('books.edit', $book->id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <form action="{{ route('books.destroy', $book->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-danger btn-sm"
-                                onclick="return confirm('Yakin hapus data?')">
-                                Hapus
-                            </button>
+                                onclick="return confirm('Yakin hapus data?')">Hapus</button>
                         </form>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center text-muted">Tidak ada data buku ditemukan.</td>
+                    <td colspan="8" class="text-center text-muted">Tidak ada data buku ditemukan.</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
-
         @if(request('search') || request('category_id'))
             <a href="{{ route('books.index') }}" class="btn btn-secondary btn-sm">Reset Pencarian</a>
         @endif
-
     </div>
 </div>
 
+</div>
 @endsection
